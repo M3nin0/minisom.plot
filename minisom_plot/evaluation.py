@@ -1,35 +1,29 @@
 import numpy as np
 
+import sklearn.datasets
+
 import matplotlib.pyplot as plt
 
 
-def umatrix(som_model, umatrix_cmap = 'RdYlBu_r', **kwargs):
+def umatrix(som_model, use_colorbar=True, **kwargs):
     """Plot Self-organizing map U-Matrix
     
     Args:
         som_model (minisom.MiniSom): MiniSom Model
         
-        umatrix_cmap (str): matplotlib colormap to use in U-Matrix grid
+        use_colorbar (bool): Flag to enable colorbar on figure plot
         
-        kwargs (dict): Parameters to matplotlib.pyplot.figure function
-    
+        kwargs (dict): Parameters to matplotlib.pyplot.imshow function
     Returns:
         matplotlib.figure.Figure: grid figure
     """    
-    
-    fig = plt.figure(**kwargs)
-    plt.pcolormesh(som_model.distance_map().T, 
-                   cmap = umatrix_cmap,
-                   color = 'w', 
-                   linestyle='-', 
-                   linewidth=0.5)
-    plt.colorbar()
         
-    fig.tight_layout()
-    return fig
+    im = plt.imshow(som_model.distance_map(), **kwargs)
+    
+    if use_colorbar: plt.colorbar(im)
+              
 
-
-def hitmap(som_model, data, hitmap_cmap = 'RdYlBu_r', **kwargs):
+def hitmap(som_model, data, use_colorbar=True, **kwargs):
     """Plot Self-organizing map hitmap
     
     Args:
@@ -38,55 +32,47 @@ def hitmap(som_model, data, hitmap_cmap = 'RdYlBu_r', **kwargs):
         data (np.ndarray): n-dimensional data to estimulate neurons and generate
         activation map
         
-        umatrix_cmap (str): matplotlib colormap to use in U-Matrix grid
+        use_colorbar (bool): Flag to enable colorbar on figure plot
         
-        kwargs (dict): Parameters to matplotlib.pyplot.figure function
+        kwargs (dict): Parameters to matplotlib.pyplot.imshow function
 
     Returns:
-        matplotlib.figure.Figure: grid figure
+        None
     """
-    
-    fig = plt.figure(**kwargs)
-    
+     
     frequencies = som_model.activation_response(data).astype(int)
+
+    im = plt.imshow(frequencies, **kwargs)
+    if use_colorbar: plt.colorbar(im)
     
-    plt.imshow(frequencies.T, cmap = hitmap_cmap)
-    plt.colorbar()
-    
-    # labeling pixel-by-pixel
-    for (i, j), value in np.ndenumerate(frequencies.T):
+    for (i, j), value in np.ndenumerate(frequencies):
         plt.text(j, i, value, verticalalignment='center', 
                               horizontalalignment='center')
-    
-    fig.tight_layout()
-    return fig
 
 
-def heatmap(som_model, hitmap_cmap = 'RdYlBu_r', **kwargs):
+def heatmap(som_model, feature_names, grid_spec, use_colorbar=True, **kwargs):
     """Plot Self-organizing map heatmap
     
     Args:
         som_model (minisom.MiniSom): MiniSom Model
         
-        umatrix_cmap (str): matplotlib colormap to use in U-Matrix grid
+        feature_names (list): list of feature names
         
-        kwargs (dict): Parameters to matplotlib.pyplot.figure function
+        grid_spec (tuple): tuple with grid plot dimensions
+        
+        use_colorbar (bool): Flag to enable colorbar on figure plot
+  
+        kwargs (dict): Parameters to matplotlib.pyplot.imshow function
 
     Returns:
-        matplotlib.figure.Figure: grid figure
+        None
     """
+
+    weights = som_model.get_weights()
     
-    fig = plt.figure(**kwargs)
-    
-    distances = som_model.distance_map()
-    
-    plt.imshow(distances.T, cmap = hitmap_cmap)
-    plt.colorbar()
-    
-    # labeling pixel-by-pixel
-    for (i, j), value in np.ndenumerate(distances.T):
-        plt.text(j, i, f'{value:.2f}', verticalalignment='center', 
-                              horizontalalignment='center')
-    
-    fig.tight_layout()
-    return fig
+    for i, fname in enumerate(feature_names):
+        plt.subplot(*grid_spec, i + 1)
+        plt.title(fname)
+        im = plt.imshow(weights[:, :, i], **kwargs)
+        
+        if use_colorbar: plt.colorbar(im)
